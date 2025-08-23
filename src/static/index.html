@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UWA G1 Dashboard</title>
+  <link rel="icon" type="image/png" href="/static/favicon/favicon.ico">
+  <script src="/static/js/misc/socket.js"></script>
+  <script src="/static/js/misc/chart.js"></script>
+
+    
+    <!-- stuff for point clouds (misery)-->
+  <script src="/static/js/pointcloud/jquery.js"></script>
+  <script src="/static/js/pointcloud/gl-matrix.js"></script>
+  <script src="/static/js/pointcloud/litegl.min.js"></script>
+  <script src="/static/js/pointcloud/Viewer.js"></script>
+  <script src="/static/js/pointcloud/Space3DViewer.js"></script>
+  <script src="/static/js/pointcloud/PointCloud2Viewer.js"></script>
+    <!-- end -->
+
+
+    <!-- main display manager -->
+  <script src="/static/js/ros_display_manager.js"></script>
+    <!-- end -->
+
+
+    <!-- ros websocket stuff -->
+  <script src="/static/js/roswebsocket/eventemitter2.min.js"></script>
+  <script src="/static/js/roswebsocket/eventemitter3.min.js"></script>
+  <script src="/static/js/roswebsocket/roslib.min.js"></script>
+  <script src="/static/js/roswebsocket/createjs.min.js"></script>
+  <script src="/static/js/misc/tailwind.js"></script>
+  <script src="/static/js/roswebsocket/ros2d.min.js"></script>
+  <script src="/static/js/roswebsocket/nav2d.min.js"></script>
+  <script src="/static/js/roswebsocket/three.min.js"></script>
+  <script src="/static/js/roswebsocket/ros3d.min.js"></script>
+    <!-- end -->
+</head>
+<style>
+
+  .setWhite {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .primary {
+    background-color: #212121
+  }
+
+  .topic-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    height: 100%;
+  }
+
+  .topic-container > div {
+    height: 95%; 
+    align-self: center;
+    justify-self: center;
+    width: 95%;
+  }
+  .border-coloured {
+    border: 1px solid #414141;
+  }
+
+  .secondary {
+    background-color: #181818;
+  }
+</style>
+<body class="primary text-white h-screen flex flex-row w-full">
+  <aside class="secondary flex flex-col gap-4 overflow-auto" style="border-right: 1px solid #414141; min-width: 16rem; max-width: 16rem">
+    <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141">
+      <h1 class="text-xl font-bold">UWA G1 Dashboard</h1>
+    </div>
+    <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141; padding-top: 0">
+        <div class="flex flex-row">
+          <p class="grow">G1 Status: </p>
+          <span id="G1Status" class="w-4 h-4 rounded-full bg-red-500 inline-block" style="margin: auto;"></span>
+          <p id="G1StatusMessage" style="padding-left: 0.5rem">Not Running</p>
+        </div>
+    </div>
+    <div class="flex flex-col gap-4 p-4">
+      <h2>Nav Stack</h2>
+        <button id="startNavReal" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mr-2">Start Nav Real</button>
+        <button id="startNavSim" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mr-2">Start Nav Sim</button>
+        <button id="stopNav" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded mr-2">Stop Nav</button>
+    </div>
+  </aside>
+
+  <div class="flex w-full flex-col">
+    <main class="grow p-4 overflow-auto">
+      <div id="main-container" class="w-full topic-container"></div>
+    </main>
+    <footer class="h-16 w-full secondary p-4 flex flex-row gap-4 items-center" style="border-top: 1px solid #414141">
+      <h2 class="grow">Autonomous Navigation Stack</h2>
+      <div class="flex items-center gap-2">
+        <span id="footerStatus" class="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
+        <p class="message" id="footerMessage">No action yet</p>
+      </div>
+    </footer>
+  </div>
+
+
+  <script>
+    const socket = io(`http://${window.location.hostname}:8000`);
+    const ros = new ROSLIB.Ros({ url: `ws://${window.location.hostname}:9090` });
+    const manager = new ROSDisplayManager("main-container", ros);
+    socket.on("connect", async () => {
+      await get("/state");
+    });
+
+    const G1Message = document.getElementById("G1StatusMessage");
+    const G1Status = document.getElementById("G1Status");
+    const FooterMessage = document.getElementById("footerMessage");
+    const FooterStatus = document.getElementById("footerStatus");
+
+
+    socket.on("state", (data) => {
+      G1Message.textContent = data.name;
+      FooterMessage.textContent = data.name;
+
+      if (data.running) {
+        if (data.sim){
+          G1Message.textContent += " (sim)";
+          FooterMessage.textContent += " (sim)";
+        }
+
+        FooterStatus.classList.remove("bg-red-500");
+        FooterStatus.classList.add("bg-green-500");
+        G1Status.classList.remove("bg-red-500");
+        G1Status.classList.add("bg-green-500");
+      } else {
+        FooterStatus.classList.remove("bg-green-500");
+        FooterStatus.classList.add("bg-red-500");
+        G1Status.classList.remove("bg-green-500");
+        G1Status.classList.add("bg-red-500");
+      }
+
+
+      manager.createDisplays(data.topics)
+    });
+
+    async function post(endpoint) {
+      try {
+        const res = await fetch(endpoint, { method: "POST" });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    }
+    async function get(endpoint) {
+      try {
+        const res = await fetch(endpoint, { method: "GET" });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    }
+
+    document.getElementById("startNavReal").onclick = () => post("/nav/start_real");
+    document.getElementById("startNavSim").onclick = () => post("/nav/start_sim");
+    document.getElementById("stopNav").onclick = () => post("/nav/stop");
+  </script>
+</body>
+</html>

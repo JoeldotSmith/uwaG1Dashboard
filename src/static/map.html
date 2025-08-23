@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+  <title>Robot Map</title>
+  <script src="/static/eventemitter2.min.js"></script>
+  <script src="/static/roslib.min.js"></script>
+  <script src="/static/createjs.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src=" https://cdn.jsdelivr.net/npm/ros2d@0.10.0/build/ros2d.min.js "></script>
+  <script src="/static/nav2d.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.89.0/build/three.min.js"></script>
+  <script src="/static/ros3d.min.js"></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<style>
+canvas {
+  background: white !important;
+}
+.setWhite {
+  height: 100%;
+  background: white;
+  overflow: hidden;
+}
+</style>
+<body class="w-full h-full">
+  <div class="w-full h-full flex flex-row gap-4 grow">
+    <div class="flex flex-col" style="width: 50%">
+      <h2 class="text-lg font-bold p-2" style="color: white">Live Map</h2>
+      <div id="map" class="w-full h-full grow setWhite rounded"></div>
+    </div>
+    <div class="flex flex-col" style="width: 50%">
+      <h2 class="text-lg font-bold p-2" style="color: white">Lidar Data</h2>
+      <div id="lidar" class="w-full h-full grow rounded"></div>
+    </div>
+  </div>
+  <script>
+      var ros = new ROSLIB.Ros({ url: `ws://${window.location.hostname}:9090` });
+
+      // map
+      var viewer = new ROS2D.Viewer({
+        divID: 'map',
+        width: document.getElementById("map").clientWidth - 16,
+        height: document.getElementById("map").clientHeight - 16
+      });
+
+      var gridClient = new ROS2D.OccupancyGridClient({
+        ros: ros,
+        rootObject: viewer.scene,
+        continuous: true,
+        topic: '/local_occupancy_grid'
+      });
+
+      gridClient.on('change', function() {
+        const viewerWidth = viewer.width;
+        const viewerHeight = viewer.height;
+
+        viewer.scene.scaleX = 20;
+        viewer.scene.scaleY = 20;
+        viewer.scene.x = robotMarker.x + viewerWidth / 2;
+        viewer.scene.y = robotMarker.y + viewerHeight / 2;
+        viewer.scene.rotation = robotMarker.rotation;
+      });
+
+      var robotMarker = new ROS2D.NavigationArrow({
+        size: 0.25,
+        strokeSize: 0.5,
+        pulse: true,
+        fillColor: createjs.Graphics.getRGB(255, 0, 0, 0.65)
+      });
+      viewer.scene.addChild(robotMarker);
+
+      var tfClient = new ROSLIB.TFClient({
+        ros: ros,
+        fixedFrame: 'map',
+        angularThres: 0.01,
+        transThres: 0.01,
+        serverName: '/tf2_web_republisher'
+      });
+
+      function tf_sub_func(tf) {
+        robotMarker.x = tf.translation.x;
+        robotMarker.y = -tf.translation.y;  
+
+        const q = tf.rotation;
+        const siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+        const cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+        const yaw = Math.atan2(siny_cosp, cosy_cosp);
+
+        robotMarker.rotation = -yaw * (180 / Math.PI);
+      }
+
+      tfClient.subscribe('pelvis', tf_sub_func);
+
+      // lidar
+      var lidarViewer = new ROS3D.Viewer({
+        divID: 'lidar',
+        width: document.getElementById("lidar").clientWidth,
+        height: document.getElementById("lidar").clientHeight,
+        antialias: true,
+        background: '#111111'
+      });
+
+
+      var cloudClient = new ROS3D.PointCloud2({
+        ros: ros,
+        tfClient: tfClient,
+        rootObject: lidarViewer.scene,
+        topic: '/cloud_registered_1', 
+        material: { size: 0.05, color: 0x00ff00 },
+        max_pts: 20000
+      });
+
+      lidarViewer.addObject(cloudClient);
+
+  </script>
+</body>
+</html>
