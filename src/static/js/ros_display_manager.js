@@ -10,6 +10,9 @@ class ROSDisplayManager {
       serverName: "/tf2_web_republisher"
     });
 
+    // {id: "id of wrapper" subscriptions: [subscription objects]}
+    this.group_subscriptions = [];
+
     // bad fix, for inverted colour bug
     ROS3D.OccupancyGrid.prototype.getColor = function (index, row, col, value) {
       return [
@@ -23,6 +26,16 @@ class ROSDisplayManager {
 
   clearDisplays() {
     this.container.innerHTML = "";
+    // this.group_subscriptions.forEach(group => {
+    //   group.subscriptions.forEach(sub => {
+    //     try {
+    //       sub.unsubscribe());
+    //     } catch (error) {
+    //       console.warn(error);
+    //     }
+    //   });
+    // });
+    // this.group_subscriptions = [];
   }
 
   createDisplays(topicgroups) {
@@ -52,6 +65,7 @@ class ROSDisplayManager {
    _createDisplayWrapper(title) {
     const wrapper = document.createElement("div")
     wrapper.className = "flex flex-col p-2 secondary rounded border border-coloured"
+    wrapper.style.maxHeight = "100%";
     const heading = document.createElement("h2")
     heading.textContent = `${title}`
     heading.className = "text-lg font-bold p-2 text-white"
@@ -80,7 +94,6 @@ class ROSDisplayManager {
           throttle_rate: 10,
         });
       const viewer = new PointCloud2Viewer(div, topic.name, "sensor_msgs/msg/PointCloud2");
-      console.log(viewer)
 
       sub.subscribe((msg) => {
         viewer.onData(msg);
@@ -134,12 +147,14 @@ class ROSDisplayManager {
   _handleGraph(group){
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
-    div.className = "w-full h-64 pt-4 setWhite rounded";
+    div.className = "w-full h-full pt-4 setWhite rounded flex flex-col";
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
-
+    // Canvas that fills parent
     const canvas = document.createElement("canvas");
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     div.appendChild(canvas);
 
     const ctx = canvas.getContext("2d");
@@ -147,12 +162,8 @@ class ROSDisplayManager {
     const data = {
       labels: [], 
       datasets: [
-        { label: "linear x", data: [], borderColor: "red", fill: false },
-        { label: "linear y", data: [], borderColor: "green", fill: false },
-        { label: "linear z", data: [], borderColor: "blue", fill: false },
-        { label: "angular x", data: [], borderColor: "orange", fill: false },
-        { label: "angular y", data: [], borderColor: "purple", fill: false },
-        { label: "angular z", data: [], borderColor: "brown", fill: false },
+        { label: "Linear (x)", data: [], borderColor: "red", fill: true },
+        { label: "Angular (y)", data: [], borderColor: "blue", fill: true },
       ]
     };
     const chart = new Chart(ctx, {
@@ -179,6 +190,8 @@ class ROSDisplayManager {
 
       }
     })
+    const resizeObserver = new ResizeObserver(() => chart.resize());
+    resizeObserver.observe(div);
   }
 
   // 3D SPECIFIC HANDLERS
@@ -226,17 +239,30 @@ class ROSDisplayManager {
   }
 
   _createURDF(topic, viewer) {
-    const defaults = {
-      ros: this.ros,
-      tfClient: this.tfClient,
-      path : `http://${window.location.hostname}:8000/urdf/`,
-      loader: ROS3D.STL_LOADER,
-      rootObject: viewer.scene,
-      param: topic.name
-    };
-
-    const options = topic.options ? { ...defaults, ...topic.options } : defaults;
-    setTimeout(() => {new ROS3D.UrdfClient(options);}, 5000);
+    // cant get this to work !!!!!
+    
+    console.warn("URDF not working yet!")
+  
+    //
+    // topic.name = "robot_description"
+    // viewer = ROS3D.Viewer
+    // const defaults = {
+    //   ros: this.ros,
+    //   tfClient: this.tfClient,
+    //   path : `http://${window.location.hostname}:8000/urdf/`,
+    //   loader: ROS3D.STL_LOADER,
+    //   rootObject: viewer.scene,
+    //   param: topic.name,
+    // };
+    //
+    // const options = topic.options ? { ...defaults, ...topic.options } : defaults;
+    // setTimeout(() => {new ROS3D.UrdfClient(options);}, 5000);
+    // new ROS3D.UrdfClient({
+    //   ros: this.ros,
+    //   tfClient: this.tfClient,
+    //   path : `http://${window.location.hostname}:8000/urdf/`,
+    //   rootObject: viewer.scene,
+    // });
   }
 
   _createPoseStamped(topic, viewer) {
@@ -282,11 +308,7 @@ class ROSDisplayManager {
       if (data.labels.length > 50) data.labels.shift();
 
       data.datasets[0].data.push(msg.linear.x);
-      data.datasets[1].data.push(msg.linear.y);
-      data.datasets[2].data.push(msg.linear.z);
-      data.datasets[3].data.push(msg.angular.x);
-      data.datasets[4].data.push(msg.angular.y);
-      data.datasets[5].data.push(msg.angular.z);
+      data.datasets[1].data.push(msg.angular.z);
 
       for (let ds of data.datasets) {
         if (ds.data.length > 50) ds.data.shift();

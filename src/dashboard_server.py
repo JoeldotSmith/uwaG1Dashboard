@@ -12,7 +12,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 class G1Server:
     def __init__(self):
-        self.running_process = None
+        self.running_proci = {}
         self.name_of_running_service = "Not Running"
         self.current_topics = []
         self.is_sim = False
@@ -20,16 +20,12 @@ class G1Server:
             NavigationController(),
         ]
 
-        self.global_sources = [
-            "/opt/ros/noetic/setup.bash",
-        ]
 
     def build_source_command(self, cmd, local_sources=None):
-        all_sources = self.global_sources[:]  
         if local_sources:
-            all_sources += local_sources
-        sources_cmd = " && ".join(f"source {s}" for s in all_sources)
-        return f"bash -c '{sources_cmd} && {cmd}'"
+            sources_cmd = " && ".join(f"source {s}" for s in local_sources)
+            return f"bash -c '{sources_cmd} && {cmd}'"
+        return f"bash -c '{cmd}'"
 
     def update_state(self, name, is_sim, topics):
         self.name_of_running_service = name
@@ -37,14 +33,14 @@ class G1Server:
         self.is_sim = is_sim
 
         send_socket_update("state", {
-            "running": server.is_running(),
+            "running": len(self.running_proci) > 0,
             "name": server.name_of_running_service,
             "topics": server.current_topics,
             "sim": server.is_sim
         })
 
-    def is_running(self):
-        return self.running_process is not None
+    def is_running(self, cmd):
+        return cmd in self.running_proci
 
 server = G1Server()
 
@@ -53,20 +49,23 @@ def send_socket_update(header, body):
     global socketio
     socketio.emit(header, body)
 
-def start_process(controller, cmd, sim=False):
+def start_process(controllerName, controllerSources, controllerObjectsToDisplay, cmd, sim=False):
     global server
-    cmd = server.build_source_command(cmd, controller.local_sources)
-    if not server.is_running():
-        server.running_process = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-        server.update_state(controller.name, sim, controller.objects_to_display)
+    cmd = server.build_source_command(cmd, controllerSources)
+    if not server.is_running(cmd):
+        print("Running: " + cmd)
+        server.running_proci[cmd] = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
+        server.update_state(controllerName, sim, controllerObjectsToDisplay)
         return True
     return False
 
 def stop_process():
     global server
-    if server.is_running():
-        server.running_process.terminate()
-        server.running_process = None
+    if len(server.running_proci) > 0:
+        for _, val in server.running_proci.items():
+            val.terminate()
+
+        server.running_proci = {}
         server.update_state("Not Running", False, [])
         return True
     return False
@@ -80,7 +79,7 @@ for controller in server.controllers:
 @app.route("/state", methods=["GET"])
 def state():
     send_socket_update("state", {
-        "running": server.is_running(),
+        "running": len(server.running_proci) > 0,
         "name": server.name_of_running_service,
         "sim": server.is_sim,
         "topics": server.current_topics
@@ -92,14 +91,14 @@ def index():
     return app.send_static_file("index.html")
 
 def start_base_process():
-    rosbridge_cmd = server.build_source_command("roslaunch rosbridge_server rosbridge_websocket.launch")
+    rosbridge_cmd = 'bash -c "source /opt/ros/noetic/setup.bash && roslaunch rosbridge_server rosbridge_websocket.launch"'
     rosbridge_proc = subprocess.Popen(
         rosbridge_cmd,
         shell=True,
         executable="/bin/bash",
     )
 
-    tf_repub_cmd = server.build_source_command("rosrun tf2_web_republisher tf2_web_republisher")
+    tf_repub_cmd = 'bash -c "source /opt/ros/noetic/setup.bash && rosrun tf2_web_republisher tf2_web_republisher"'
     tf_repub_proc = subprocess.Popen(
         tf_repub_cmd,
         shell=True,
@@ -130,5 +129,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        cleanup_processes([rosbridge_proc, tf_repub_proc, server.running_process])
+        cleanup_processes([rosbridge_proc, tf_repub_proc] + list(server.running_proci.values()))
 

@@ -175,31 +175,15 @@ class Space3DViewer extends Viewer {
   }
 
   _getColor(v, vmin, vmax) {
-    // cube edge walk from from http://paulbourke.net/miscellaneous/colourspace/
-    let c = [1.0, 1.0, 1.0];
+    v = Math.max(vmin, Math.min(vmax, v));
+    let t = 1 - (v - vmin) / (vmax - vmin);
+    t = (t + 0.5) % 1; 
 
-    if (v < vmin)
-       v = vmin;
-    if (v > vmax)
-       v = vmax;
-    let dv = vmax - vmin;
-    if(dv < 1e-2) dv = 1e-2;
+    let r = Math.min(Math.max(1.5 * t - 0.5, 0), 1);
+    let g = Math.min(Math.max(-1.5 * Math.abs(t - 0.5) + 1, 0), 1);
+    let b = Math.min(Math.max(1.5 * (1 - t) - 0.5, 0), 1);
 
-    if (v < (vmin + 0.25 * dv)) {
-      c[0] = 0;
-      c[1] = 4 * (v - vmin) / dv;
-    } else if (v < (vmin + 0.5 * dv)) {
-      c[0] = 0;
-      c[2] = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
-    } else if (v < (vmin + 0.75 * dv)) {
-      c[0] = 4 * (v - vmin - 0.5 * dv) / dv;
-      c[2] = 0;
-    } else {
-      c[1] = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
-      c[2] = 0;
-    }
-
-    return(c);
+    return [r, g, b];
   }
 
   draw(drawObjects) {
