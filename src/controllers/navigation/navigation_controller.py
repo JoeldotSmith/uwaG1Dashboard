@@ -3,6 +3,7 @@ from flask import request
 import os
 from controllers.base_controller import BaseController
 
+
 class NavigationController(BaseController):
     def __init__(self):
         self.name = "Navigation"
@@ -10,12 +11,12 @@ class NavigationController(BaseController):
             "/opt/ros/noetic/setup.bash",
             os.path.expanduser("~/nav_stack/ws_livox/devel/setup.bash"),
             os.path.expanduser("~/nav_stack/ws_loc/devel/setup.bash"),
-            os.path.expanduser("~/nav_stack/ws_nav/devel/setup.bash")
+            os.path.expanduser("~/nav_stack/ws_nav/devel/setup.bash"),
         ]
         self.ros_bridge_sources = [
             "/opt/ros/noetic/setup.bash",
             "/opt/ros/foxy/setup.bash",
-            os.path.expanduser("~/nav_stack/unitree_controller_ros2/setup.sh")
+            os.path.expanduser("~/nav_stack/unitree_controller_ros2/setup.sh"),
         ]
 
         self.real_objects = [
@@ -34,18 +35,18 @@ class NavigationController(BaseController):
                     {
                         "name": "/global_path",
                         "type": "Path",
-                        "options": {"color": 0xff0000},
+                        "options": {"color": 0xFF0000},
                     },
                     {
                         "name": "/local_path",
                         "type": "Path",
-                        "options": {"color": 0x0000ff},
+                        "options": {"color": 0x0000FF},
                     },
                     {
                         "name": "/move_base_simple/goal",
                         "type": "PoseStamped",
                     },
-                ]
+                ],
             },
             {
                 "name": "Lidar",
@@ -55,7 +56,7 @@ class NavigationController(BaseController):
                         "name": "/cloud_registered_1",
                         "type": "PointCloud2",
                     }
-                ]
+                ],
             },
             {
                 "name": "/cmd_vel",
@@ -65,7 +66,7 @@ class NavigationController(BaseController):
                         "name": "/cmd_vel",
                         "type": "Twist",
                     }
-                ]
+                ],
             },
         ]
         self.sim_objects = [
@@ -80,22 +81,22 @@ class NavigationController(BaseController):
                     {
                         "name": "/map",
                         "type": "OccupancyGrid",
-                    }, 
+                    },
                     {
                         "name": "/global_path",
                         "type": "Path",
-                        "options": {"color": 0xff0000},
+                        "options": {"color": 0xFF0000},
                     },
                     {
                         "name": "/local_path",
                         "type": "Path",
-                        "options": {"color": 0x0000ff},
+                        "options": {"color": 0x0000FF},
                     },
                     {
                         "name": "/move_base_simple/goal",
                         "type": "PoseStamped",
                     },
-                ]
+                ],
             },
             # {
             #     "name": "Lidar",
@@ -118,22 +119,67 @@ class NavigationController(BaseController):
                         "type": "Twist",
                     }
                 ],
-
-            }
+            },
         ]
+        self.buttons = {
+            "name": "Nav",
+            "buttons": [
+                {
+                    "name": "Start Nav Real",
+                    "type": "button",
+                    "action": "/nav/start_real",
+                    "icon": "play_arrow",
+                    "color": "green",
+                },
+                {
+                    "name": "Start Nav Sim",
+                    "type": "button",
+                    "action": "/nav/start_sim",
+                    "icon": "science",
+                    "color": "green",
+                },
+                {
+                    "name": "Stop Nav",
+                    "type": "button",
+                    "action": "/nav/stop",
+                    "icon": "stop_circle",
+                    "color": "red",
+                },
+            ],
+        }
 
-    def register_routes(self, app, socketio, send_socket_update, start_process, stop_process):
+    def register_routes(
+        self, app, socketio, send_socket_update, start_process, stop_process
+    ):
         @app.route("/nav/start_sim", methods=["POST"])
         def start_nav_sim():
-            if start_process(self.name, self.main_sources, self.sim_objects, "roslaunch unitree_controller master_sim.launch", True):
+            if start_process(
+                self.name,
+                self.main_sources,
+                self.sim_objects,
+                "roslaunch unitree_controller master_sim.launch",
+                True,
+            ):
                 return jsonify({"status": "started"})
             return jsonify({"status": "already running"})
 
         @app.route("/nav/start_real", methods=["POST"])
         def start_nav_real():
-            main = start_process(self.name, self.main_sources, self.real_objects, "roslaunch unitree_controller master_real.launch", False)
+            main = start_process(
+                self.name,
+                self.main_sources,
+                self.real_objects,
+                "roslaunch unitree_controller master_real.launch",
+                False,
+            )
             # starts rosbridge to convert cmd_vel to ros2 for connection to robot
-            bridge = start_process(self.name, self.ros_bridge_sources, self.sim_objects, "ros2 launch unitree_link unitree_launch.py", True)
+            bridge = start_process(
+                self.name,
+                self.ros_bridge_sources,
+                self.sim_objects,
+                "ros2 launch unitree_link unitree_launch.py",
+                True,
+            )
             if main and bridge:
                 return jsonify({"status": "started"})
             return jsonify({"status": "already running"})

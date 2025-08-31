@@ -97,11 +97,7 @@
             <p id="G1StatusMessage" style="padding-left: 0.5rem">Not Running</p> 
           </div> 
         </div> 
-        <div class="flex flex-col gap-4 p-4"> 
-          <h2>Nav Stack</h2> 
-          <button id="startNavReal" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mr-2">Start Nav Real</button> 
-          <button id="startNavSim" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded mr-2">Start Nav Sim</button> 
-          <button id="stopNav" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded mr-2">Stop Nav</button> 
+        <div id="buttonContainer" class="flex flex-col gap-4 p-4"> 
         </div>
       </div>
 
@@ -131,7 +127,7 @@
   </div>
 
 
-  <script>
+  <script type="module">
     const socket = io(`http://${window.location.hostname}:8000`);
     const ros = new ROSLIB.Ros({ url: `ws://${window.location.hostname}:9090` });
     const manager = new ROSDisplayManager("main-container", ros);
@@ -191,9 +187,45 @@
       }
     }
 
-    document.getElementById("startNavReal").onclick = () => post("/nav/start_real");
-    document.getElementById("startNavSim").onclick = () => post("/nav/start_sim");
-    document.getElementById("stopNav").onclick = () => post("/nav/stop");
+
+    let buttons = await get("/buttons")
+    let container = document.getElementById("buttonContainer")
+  buttons.forEach(group => {
+    let groupDiv = document.createElement("div")
+    groupDiv.className = "primary border-coloured rounded-2xl shadow p-4 flex flex-col gap-4"
+
+    let title = document.createElement("h2")
+    title.textContent = group.name
+    title.className = "text-lg font-semibold text-white"
+    groupDiv.appendChild(title)
+
+    let buttonRow = document.createElement("div")
+    buttonRow.className = "flex flex-wrap gap-3"
+
+    group.buttons.forEach(btn => {
+      let el = document.createElement("button")
+      el.title = btn.name
+      el.className = "p-3 rounded-xl hover:bg-gray-600 transition-colors shadow"
+
+      el.onclick = () => post(btn.action)
+
+      let icon = document.createElement("i")
+      icon.className = "material-icons text-2xl"
+      icon.textContent = btn.icon
+
+      if (btn.color === "green") {
+        icon.classList.add("text-green-400")
+      } else {
+        icon.classList.add("text-red-400")
+      }
+
+      el.appendChild(icon)
+      buttonRow.appendChild(el)
+    })
+
+    groupDiv.appendChild(buttonRow)
+    container.appendChild(groupDiv)
+  })
   </script>
 </body>
 </html>

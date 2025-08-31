@@ -1,8 +1,12 @@
 import subprocess, os, signal
 
+
 class BaseController:
     def __init__(self):
         self.name = self.__class__.__name__
+        self.buttons = []
 
-    def register_routes(self, app, socketio, send_socket_update, start_process, stop_process):
+    def register_routes(
+        self, app, socketio, send_socket_update, start_process, stop_process
+    ):
         raise NotImplementedError
