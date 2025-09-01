@@ -155,10 +155,10 @@ class ROSDisplayManager {
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
     div.className = "w-full h-full pt-4 setWhite rounded flex flex-col";
+    div.style = "position: relative";
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
-    // Canvas that fills parent
     const canvas = document.createElement("canvas");
     canvas.style.width = "100%";
     canvas.style.height = "100%";

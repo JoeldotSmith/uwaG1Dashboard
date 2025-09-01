@@ -33,13 +33,6 @@ class MocopiController(BaseController):
                     "icon": "connected_tv",
                     "color": "green",
                 },
-                {
-                    "name": "Stop Mocopi",
-                    "type": "button",
-                    "action": "/mocopi/stop",
-                    "icon": "stop_circle",
-                    "color": "red",
-                },
             ],
         }
 
@@ -69,9 +62,3 @@ class MocopiController(BaseController):
             ):
                 return jsonify({"status": "started"})
             return jsonify({"status": "already running"})
-
-        @app.route("/mocopi/stop", methods=["POST"])
-        def stop_mocopi():
-            if stop_process():
-                return jsonify({"status": "stopped"})
-            return jsonify({"status": "not running"})

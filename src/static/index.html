@@ -77,9 +77,13 @@
       <button @click="openPanel = openPanel === 'run' ? null : 'run'" class="h-16 flex items-center justify-center hover:bg-gray-700">
         <i class="material-icons">play_arrow</i>
       </button>
-
       <button @click="openPanel = openPanel === 'layout' ? null : 'layout'" class="h-16 flex items-center justify-center hover:bg-gray-700">
         <i class="material-icons">view_quilt</i>
+      </button>
+
+      <div class="grow"></div>
+      <button id="killButton" class="h-16 flex items-center justify-center hover:bg-gray-700 ">
+        <i class="material-icons text-red-600">stop_circle</i>
       </button>
     </div>
 
@@ -140,6 +144,7 @@
     const socket = io(`http://${window.location.hostname}:8000`);
     const ros = new ROSLIB.Ros({ url: `ws://${window.location.hostname}:9090` });
     const manager = new ROSDisplayManager("main-container", ros);
+    const killButton = document.getElementById("killButton");
     socket.on("connect", async () => {
       await get("/state");
     });
@@ -197,17 +202,18 @@
       }
     }
 
+    killButton.onclick = () => get("/stop");
 
     // SIDE BAR STUFF
     let buttons = await get("/buttons")
     let container = document.getElementById("buttonContainer")
     buttons.forEach(group => {
       let groupDiv = document.createElement("div")
-      groupDiv.className = "primary border-coloured rounded-2xl shadow p-4 flex flex-col gap-2"
+      groupDiv.className = "primary border-coloured rounded-2xl shadow p-4 flex flex-wrap gap-2"
 
       let title = document.createElement("h2")
-      title.textContent = group.name
-      title.className = "font-semibold text-white"
+      title.textContent = group.name + ":";
+      title.className = "font-semibold text-white grow my-auto"
       groupDiv.appendChild(title)
 
       let buttonRow = document.createElement("div")

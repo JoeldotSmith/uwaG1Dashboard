@@ -138,13 +138,6 @@ class NavigationController(BaseController):
                     "icon": "map",
                     "color": "green",
                 },
-                {
-                    "name": "Stop Nav",
-                    "type": "button",
-                    "action": "/nav/stop",
-                    "icon": "stop_circle",
-                    "color": "red",
-                },
             ],
         }
 
@@ -183,9 +176,3 @@ class NavigationController(BaseController):
             if main and bridge:
                 return jsonify({"status": "started"})
             return jsonify({"status": "already running"})
-
-        @app.route("/nav/stop", methods=["POST"])
-        def stop_nav():
-            if stop_process():
-                return jsonify({"status": "stopped"})
-            return jsonify({"status": "not running"})

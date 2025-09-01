@@ -113,6 +113,13 @@ def index():
     return app.send_static_file("index.html")
 
 
+@app.route("/stop")
+def stop_all():
+    if stop_process():
+        return jsonify({"status": "stopped"})
+    return jsonify({"status": "not running"})
+
+
 def start_base_process():
     rosbridge_cmd = 'bash -c "source /opt/ros/noetic/setup.bash && roslaunch rosbridge_server rosbridge_websocket.launch"'
     rosbridge_proc = subprocess.Popen(
