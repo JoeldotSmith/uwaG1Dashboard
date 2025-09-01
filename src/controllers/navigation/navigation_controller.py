@@ -178,7 +178,7 @@ class NavigationController(BaseController):
                 self.ros_bridge_sources,
                 self.sim_objects,
                 "ros2 launch unitree_link unitree_launch.py",
-                True,
+                False,
             )
             if main and bridge:
                 return jsonify({"status": "started"})

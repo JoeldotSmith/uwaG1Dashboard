@@ -102,9 +102,18 @@
       </div>
 
       <!-- Layout panel -->
-      <div x-show="openPanel === 'layout'" x-transition class="p-4">
-        <h2 class="font-bold mb-2">Layout</h2>
-        <p>TODO</p>
+      <div x-show="openPanel === 'layout'" x-transition>
+        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141"> 
+          <h1 class="text-xl font-bold">Layout</h1> 
+        </div> 
+        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141; padding-top: 0"> 
+          <div class="flex flex-row pt-4"> 
+            <p class="grow">Panel Count: </p> 
+            <p id="panelCount" style="padding-left: 0.5rem">0</p> 
+          </div> 
+        </div> 
+        <div id="layoutContainer" class="flex flex-col gap-4"> 
+        </div>
       </div>
     </div>
 
@@ -163,7 +172,8 @@
       }
 
 
-      manager.createDisplays(data.topics)
+      manager.createDisplays(data.topics);
+      handleLayout(data.topics);
     });
 
     async function post(endpoint) {
@@ -188,44 +198,84 @@
     }
 
 
+    // SIDE BAR STUFF
     let buttons = await get("/buttons")
     let container = document.getElementById("buttonContainer")
-  buttons.forEach(group => {
-    let groupDiv = document.createElement("div")
-    groupDiv.className = "primary border-coloured rounded-2xl shadow p-4 flex flex-col gap-4"
+    buttons.forEach(group => {
+      let groupDiv = document.createElement("div")
+      groupDiv.className = "primary border-coloured rounded-2xl shadow p-4 flex flex-col gap-4"
 
-    let title = document.createElement("h2")
-    title.textContent = group.name
-    title.className = "text-lg font-semibold text-white"
-    groupDiv.appendChild(title)
+      let title = document.createElement("h2")
+      title.textContent = group.name
+      title.className = "text-lg font-semibold text-white"
+      groupDiv.appendChild(title)
 
-    let buttonRow = document.createElement("div")
-    buttonRow.className = "flex flex-wrap gap-3"
+      let buttonRow = document.createElement("div")
+      buttonRow.className = "flex flex-wrap gap-3"
 
-    group.buttons.forEach(btn => {
-      let el = document.createElement("button")
-      el.title = btn.name
-      el.className = "p-3 rounded-xl hover:bg-gray-600 transition-colors shadow"
+      group.buttons.forEach(btn => {
+        let el = document.createElement("button")
+        el.title = btn.name
+        el.className = "p-3 rounded-xl hover:bg-gray-600 transition-colors shadow"
 
-      el.onclick = () => post(btn.action)
+        el.onclick = () => post(btn.action)
 
-      let icon = document.createElement("i")
-      icon.className = "material-icons text-2xl"
-      icon.textContent = btn.icon
+        let icon = document.createElement("i")
+        icon.className = "material-icons text-2xl"
+        icon.textContent = btn.icon
 
-      if (btn.color === "green") {
-        icon.classList.add("text-green-400")
-      } else {
-        icon.classList.add("text-red-400")
-      }
+        if (btn.color === "green") {
+          icon.classList.add("text-green-400")
+        } else {
+          icon.classList.add("text-red-400")
+        }
 
-      el.appendChild(icon)
-      buttonRow.appendChild(el)
+        el.appendChild(icon)
+        buttonRow.appendChild(el)
+      })
+
+      groupDiv.appendChild(buttonRow)
+      container.appendChild(groupDiv)
     })
 
-    groupDiv.appendChild(buttonRow)
-    container.appendChild(groupDiv)
-  })
+  function handleLayout(topicgroups) {
+    const layoutContainer = document.getElementById("layoutContainer");
+    const panelCount = document.getElementById("panelCount");
+    layoutContainer.innerHTML = "";
+    let panelCountNum = 0;
+
+    topicgroups.forEach(topicgroup => {
+      panelCountNum++;
+      const panel = document.createElement("div");
+      panel.className = "bg-neutral-900 rounded-2xl shadow-md p-4 mb-6 flex flex-col gap-3";
+
+      const title = document.createElement("h2");
+      title.textContent = topicgroup.name;
+      title.className = "text-lg font-semibold text-white border-b border-neutral-700 pb-2";
+      panel.appendChild(title);
+
+      topicgroup.topics.forEach(topic => {
+        const row = document.createElement("div");
+        row.className = "flex justify-between flex-wrap items-center bg-neutral-800 rounded-xl px-3 py-2";
+
+        const nameEl = document.createElement("span");
+        nameEl.textContent = topic.name;
+        nameEl.className = "text-white";
+
+        const typeEl = document.createElement("span");
+        typeEl.textContent = topic.type;
+        typeEl.className = "text-sm text-neutral-400 italic";
+
+        row.appendChild(nameEl);
+        row.appendChild(typeEl);
+        panel.appendChild(row);
+      });
+
+      layoutContainer.appendChild(panel);
+    });
+
+    panelCount.textContent = panelCountNum;
+  }
   </script>
 </body>
 </html>

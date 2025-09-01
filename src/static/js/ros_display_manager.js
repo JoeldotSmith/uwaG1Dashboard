@@ -14,7 +14,7 @@ class ROSDisplayManager {
     this.group_subscriptions = [];
 
     // bad fix, for inverted colour bug
-    ROS3D.OccupancyGrid.prototype.getColor = function (index, row, col, value) {
+    ROS3D.OccupancyGrid.prototype.getColor = function(index, row, col, value) {
       return [
         255 - ((value * this.color.r) / 255),
         255 - ((value * this.color.g) / 255),
@@ -62,7 +62,7 @@ class ROSDisplayManager {
     }
   }
 
-   _createDisplayWrapper(title) {
+  _createDisplayWrapper(title) {
     const wrapper = document.createElement("div")
     wrapper.className = "flex flex-col p-2 secondary rounded border border-coloured"
     wrapper.style.maxHeight = "100%";
@@ -88,11 +88,11 @@ class ROSDisplayManager {
 
     group.topics.forEach(topic => {
       const sub = new ROSLIB.Topic({
-          ros: this.ros,
-          name: topic.name,
-          messageType: "sensor_msgs/PointCloud2",
-          throttle_rate: 10,
-        });
+        ros: this.ros,
+        name: topic.name,
+        messageType: "sensor_msgs/PointCloud2",
+        throttle_rate: 10,
+      });
       const viewer = new PointCloud2Viewer(div, topic.name, "sensor_msgs/msg/PointCloud2");
 
       sub.subscribe((msg) => {
@@ -142,9 +142,16 @@ class ROSDisplayManager {
           return null;
       }
     })
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        viewer.resize(width, height);
+      }
+    });
+    resizeObserver.observe(div);
   }
 
-  _handleGraph(group){
+  _handleGraph(group) {
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
     div.className = "w-full h-full pt-4 setWhite rounded flex flex-col";
@@ -160,7 +167,7 @@ class ROSDisplayManager {
     const ctx = canvas.getContext("2d");
 
     const data = {
-      labels: [], 
+      labels: [],
       datasets: [
         { label: "Linear (x)", data: [], borderColor: "red", fill: true },
         { label: "Angular (y)", data: [], borderColor: "blue", fill: true },
@@ -207,11 +214,11 @@ class ROSDisplayManager {
     this.tfClient.subscribe(topic.name, tf => {
       robotMarker.position.set(tf.translation.x, tf.translation.y, tf.translation.z);
       const rot90 = new THREE.Quaternion();
-      rot90.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2); 
+      rot90.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
 
-      const q = tf.rotation; 
+      const q = tf.rotation;
       const tfQuat = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-      tfQuat.multiply(rot90); 
+      tfQuat.multiply(rot90);
       robotMarker.quaternion.copy(tfQuat);
     });
   }
@@ -240,9 +247,9 @@ class ROSDisplayManager {
 
   _createURDF(topic, viewer) {
     // cant get this to work !!!!!
-    
+
     console.warn("URDF not working yet!")
-  
+
     //
     // topic.name = "robot_description"
     // viewer = ROS3D.Viewer
@@ -286,10 +293,10 @@ class ROSDisplayManager {
 
       poseMarker.position.set(p.x, p.y, p.z);
       const rot90 = new THREE.Quaternion();
-      rot90.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2); 
+      rot90.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
 
       const tfQuat = new THREE.Quaternion(o.x, o.y, o.z, o.w);
-      tfQuat.multiply(rot90); 
+      tfQuat.multiply(rot90);
       poseMarker.quaternion.copy(tfQuat);
     });
   }
