@@ -23,14 +23,14 @@ class MocopiController(BaseController):
                     "name": "Start Mocopi Real",
                     "type": "button",
                     "action": "/mocopi/start_real",
-                    "icon": "play_arrow",
+                    "icon": "connect_without_contact",
                     "color": "green",
                 },
                 {
                     "name": "Start Mocopi Sim",
                     "type": "button",
                     "action": "/mocopi/start_sim",
-                    "icon": "science",
+                    "icon": "connected_tv",
                     "color": "green",
                 },
                 {

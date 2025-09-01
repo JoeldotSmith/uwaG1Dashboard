@@ -128,14 +128,14 @@ class NavigationController(BaseController):
                     "name": "Start Nav Real",
                     "type": "button",
                     "action": "/nav/start_real",
-                    "icon": "play_arrow",
+                    "icon": "assistant_navigation",
                     "color": "green",
                 },
                 {
                     "name": "Start Nav Sim",
                     "type": "button",
                     "action": "/nav/start_sim",
-                    "icon": "science",
+                    "icon": "map",
                     "color": "green",
                 },
                 {
