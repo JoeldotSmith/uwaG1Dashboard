@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, send_from_directory
 from flask_socketio import SocketIO
 import subprocess
-import threading
 import os
+import psutil
 import signal
 from controllers.navigation.navigation_controller import NavigationController
 from controllers.mocopi.mocopi_controller import MocopiController
@@ -111,6 +111,16 @@ def get_buttons():
 @app.route("/")
 def index():
     return app.send_static_file("index.html")
+
+
+@app.route("/system-stats")
+def system_stats():
+    stats = {
+        "cpu": psutil.cpu_percent(interval=None),
+        "memory": psutil.virtual_memory().percent,
+        "disk": psutil.disk_usage("/").percent,
+    }
+    return jsonify(stats)
 
 
 @app.route("/stop")

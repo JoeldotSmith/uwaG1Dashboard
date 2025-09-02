@@ -130,7 +130,11 @@
         </div>
       </main>
       <footer class="h-16 w-full secondary p-4 flex flex-row gap-4 items-center" style="border: 1px solid #414141">
-        <h2 class="grow">Autonomous Navigation Stack</h2>
+        <div class="grow flex-row gap-4 flex">
+          <p id="cpu"></p>
+          <p id="memory"></p>
+          <p id="disk"></p>
+        </div>
         <div class="flex items-center gap-2">
           <span id="footerStatus" class="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
           <p class="message" id="footerMessage">No action yet</p>
@@ -230,12 +234,6 @@
         icon.className = "material-icons text-2xl"
         icon.textContent = btn.icon
 
-        // if (btn.color === "green") {
-        //   icon.classList.add("text-green-400")
-        // } else {
-        //   icon.classList.add("text-red-400")
-        // }
-        //
         el.appendChild(icon)
         buttonRow.appendChild(el)
       })
@@ -282,6 +280,33 @@
 
     panelCount.textContent = panelCountNum;
   }
+
+  async function updateSystemStats() {
+    const res = await fetch("/system-stats")
+    const stats = await res.json()
+
+    const cpuElem = document.getElementById("cpu")
+    const memElem = document.getElementById("memory")
+    const diskElem = document.getElementById("disk")
+
+    function setColor(elem, value) {
+      let color
+      if (value < 50) color = "white"
+      else if (value < 80) color = "orange"
+      else color = "red"
+      elem.style.color = color
+    }
+
+    cpuElem.textContent = `CPU: ${stats.cpu}%`
+    memElem.textContent = `RAM: ${stats.memory}%`
+    diskElem.textContent = `Disk: ${stats.disk}%`
+
+    setColor(cpuElem, stats.cpu)
+    setColor(memElem, stats.memory)
+    setColor(diskElem, stats.disk)
+  }
+  setInterval(updateSystemStats, 2000)
+  updateSystemStats()
   </script>
 </body>
 </html>
