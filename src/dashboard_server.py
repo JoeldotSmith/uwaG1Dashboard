@@ -162,17 +162,17 @@ def cleanup_processes(procs):
 def serve_urdf(filename):
     return send_from_directory(os.path.join(app.root_path, "urdf"), filename)
 
-
-if __name__ == "__main__":
-    import os
-
+def start():
+    import subprocess
     rosbridge_proc, tf_repub_proc = start_base_process()
-
     try:
-        socketio.run(app, host="0.0.0.0", port=8000)
+        import gunicorn.app.wsgiapp as wsgi
+        sys.argv = ['gunicorn', '--bind', '0.0.0.0:8000', '--worker-class', 'eventlet', '-w', '1', 'dashboard_server:app']
+        wsgi.run()
     except KeyboardInterrupt:
         pass
     finally:
-        cleanup_processes(
-            [rosbridge_proc, tf_repub_proc] + list(server.running_proci.values())
-        )
+        cleanup_processes([rosbridge_proc, tf_repub_proc] + list(server.running_proci.values()))
+
+if __name__ != "__main__":
+    start_base_process()
