@@ -169,7 +169,7 @@ class NavigationController(BaseController):
             bridge = start_process(
                 self.name,
                 self.ros_bridge_sources,
-                self.sim_objects,
+                self.real_objects,
                 "ros2 launch unitree_link unitree_launch.py",
                 False,
             )

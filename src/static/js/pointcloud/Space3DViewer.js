@@ -26,12 +26,12 @@ class Space3DViewer extends Viewer {
 
     let that = this;
 
-    this.gl = GL.create({ version:1, width: 500, height: 500});
-	  this.wrapper2[0].appendChild(this.gl.canvas);
+    this.gl = GL.create({ version: 1, width: 500, height: 500 });
+    this.wrapper2[0].appendChild(this.gl.canvas);
     $(this.gl.canvas).css("width", "100%");
-	  this.gl.animate(); // launch loop
+    this.gl.animate(); // launch loop
 
-		this.cam_pos = [0,100,100];
+    this.cam_pos = [0, 100, 100];
     this.cam_theta = -1.5707;
     this.cam_phi = 1.0;
     this.cam_r = 50.0;
@@ -49,35 +49,35 @@ class Space3DViewer extends Viewer {
     this.temp = mat4.create();
 
     this.gl.captureMouse(true, true);
-		this.gl.onmouse = function(e) {
-			if(e.dragging) {
-        if(e.rightButton) {
-          that.cam_offset_x += e.deltax/30 * Math.sin(that.cam_theta);
-          that.cam_offset_y -= e.deltax/30 * Math.cos(that.cam_theta);
-          that.cam_offset_z += e.deltay/30;
+    this.gl.onmouse = function(e) {
+      if (e.dragging) {
+        if (e.rightButton) {
+          that.cam_offset_x += e.deltax / 30 * Math.sin(that.cam_theta);
+          that.cam_offset_y -= e.deltax / 30 * Math.cos(that.cam_theta);
+          that.cam_offset_z += e.deltay / 30;
           that.updatePerspective();
         } else {
-          if(Math.abs(e.deltax) > 100 || Math.abs(e.deltay) > 100) return;
+          if (Math.abs(e.deltax) > 100 || Math.abs(e.deltay) > 100) return;
           that.cam_theta -= e.deltax / 300;
           that.cam_phi -= e.deltay / 300;
 
           // avoid euler singularities
           // also don't let the user flip the entire cloud around
-          if(that.cam_phi < 0) {
+          if (that.cam_phi < 0) {
             that.cam_phi = 0.001;
           }
-          if(that.cam_phi > Math.PI) {
+          if (that.cam_phi > Math.PI) {
             that.cam_phi = Math.PI - 0.001;
           }
           that.updatePerspective();
         }
-			}
-		}
+      }
+    }
 
     this.gl.onmousewheel = function(e) {
       that.cam_r -= e.delta;
-      if(that.cam_r < 1.0) that.cam_r = 1.0;
-      if(that.cam_r > 1000.0) that.cam_r = 1000.0;
+      if (that.cam_r < 1.0) that.cam_r = 1.0;
+      if (that.cam_r > 1000.0) that.cam_r = 1000.0;
       that.updatePerspective();
     }
 
@@ -88,8 +88,8 @@ class Space3DViewer extends Viewer {
 
       that.view = mat4.create();
       mat4.perspective(that.proj, 45 * DEG2RAD, that.gl.canvas.width / that.gl.canvas.height, 0.1, 1000);
-      mat4.lookAt(that.view, that.cam_pos, [this.cam_offset_x,this.cam_offset_y, this.cam_offset_z], [0,0,1]);
-	    mat4.multiply(that.mvp, that.proj, that.view);
+      mat4.lookAt(that.view, that.cam_pos, [this.cam_offset_x, this.cam_offset_y, this.cam_offset_z], [0, 0, 1]);
+      mat4.multiply(that.mvp, that.proj, that.view);
     }
 
     this.updatePerspective();
@@ -114,22 +114,22 @@ class Space3DViewer extends Viewer {
       }\
     ');
     //generic gl flags and settings
-    this.gl.clearColor(0.1,0.1,0.1,1);
-    this.gl.disable( this.gl.DEPTH_TEST );
+    this.gl.clearColor(0.1, 0.1, 0.1, 1);
+    this.gl.disable(this.gl.DEPTH_TEST);
 
     //rendering loop
     this.gl.ondraw = function() {
-      that.gl.clear( that.gl.COLOR_BUFFER_BIT | that.gl.DEPTH_BUFFER_BIT );
-      if(!that.drawObjectsGl) return;
-      for(let i in that.drawObjectsGl) {
-        if(that.drawObjectsGl[i].type === "points") {
+      that.gl.clear(that.gl.COLOR_BUFFER_BIT | that.gl.DEPTH_BUFFER_BIT);
+      if (!that.drawObjectsGl) return;
+      for (let i in that.drawObjectsGl) {
+        if (that.drawObjectsGl[i].type === "points") {
           that.shader.uniforms({
-            u_color: [1,1,1,1],
+            u_color: [1, 1, 1, 1],
             u_mvp: that.mvp
           }).draw(that.drawObjectsGl[i].mesh, gl.POINTS);
-        } else if(that.drawObjectsGl[i].type === "lines") {
+        } else if (that.drawObjectsGl[i].type === "lines") {
           that.shader.uniforms({
-            u_color: [1,1,1,1],
+            u_color: [1, 1, 1, 1],
             u_mvp: that.mvp
           }).draw(that.drawObjectsGl[i].mesh, gl.LINES);
         }
@@ -140,44 +140,44 @@ class Space3DViewer extends Viewer {
 
     this.gridPoints = [];
     this.gridColors = [];
-    for(let x=-5.0;x<=5.0+0.001;x+=1.0) {
+    for (let x = -5.0; x <= 5.0 + 0.001; x += 1.0) {
       this.gridPoints.push(x);
       this.gridPoints.push(-5);
       this.gridPoints.push(0);
       this.gridPoints.push(x);
       this.gridPoints.push(5);
       this.gridPoints.push(0);
-      for(let i=0;i<8;i++) {
+      for (let i = 0; i < 8; i++) {
         this.gridColors.push(1);
       }
     }
 
-    for(let y=-5.0;y<=5.0+0.001;y+=1.0) {
+    for (let y = -5.0; y <= 5.0 + 0.001; y += 1.0) {
       this.gridPoints.push(-5);
       this.gridPoints.push(y);
       this.gridPoints.push(0);
       this.gridPoints.push(5);
       this.gridPoints.push(y);
       this.gridPoints.push(0);
-      for(let i=0;i<8;i++) {
+      for (let i = 0; i < 8; i++) {
         this.gridColors.push(1);
       }
     }
 
-    this.gridMesh = GL.Mesh.load({vertices: this.gridPoints, colors: this.gridColors}, null, null, this.gl);
+    this.gridMesh = GL.Mesh.load({ vertices: this.gridPoints, colors: this.gridColors }, null, null, this.gl);
 
     // initialize static mesh for axes
 
-    this.axesPoints = [ 0,0,0, 1,0,0, 0,0,0, 0,1,0, 0,0,0, 0,0,1, ];
-    this.axesColors = [ 1,0,0,1, 1,0,0,1, 0,1,0,1, 0,1,0,1, 0,0.5,1,1, 0,0.5,1,1, ];
+    this.axesPoints = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,];
+    this.axesColors = [1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0.5, 1, 1, 0, 0.5, 1, 1,];
 
-    this.axesMesh = GL.Mesh.load({vertices: this.axesPoints, colors: this.axesColors});
+    this.axesMesh = GL.Mesh.load({ vertices: this.axesPoints, colors: this.axesColors });
   }
 
   _getColor(v, vmin, vmax) {
     v = Math.max(vmin, Math.min(vmax, v));
     let t = 1 - (v - vmin) / (vmax - vmin);
-    t = (t + 0.5) % 1; 
+    t = (t + 0.5) % 1;
 
     let r = Math.min(Math.max(1.5 * t - 0.5, 0), 1);
     let g = Math.min(Math.max(-1.5 * Math.abs(t - 0.5) + 1, 0), 1);
@@ -191,29 +191,29 @@ class Space3DViewer extends Viewer {
     let drawObjectsGl = [];
 
     // draw grid
-    
-    drawObjectsGl.push({type: "lines", mesh: this.gridMesh});
+
+    drawObjectsGl.push({ type: "lines", mesh: this.gridMesh });
 
     // draw axes
 
-    drawObjectsGl.push({type: "lines", mesh: this.axesMesh});
+    drawObjectsGl.push({ type: "lines", mesh: this.axesMesh });
 
-    for(let i in drawObjects) {
+    for (let i in drawObjects) {
       let drawObject = drawObjects[i];
-      if(drawObject.type === "points") {
+      if (drawObject.type === "points") {
         let colors = new Float32Array(drawObject.data.length / 3 * 4);
         let zmin = drawObject.zmin || -2;
         let zmax = drawObject.zmax || 2;
         let zrange = zmax - zmin;
-        for(let j=0; j < drawObject.data.length / 3; j++) {
-          let c = this._getColor(drawObject.data[3*j+2], zmin, zmax)
-          colors[4*j] = c[0];
-          colors[4*j+1] = c[1];
-          colors[4*j+2] = c[2];
-          colors[4*j+3] = 1;
+        for (let j = 0; j < drawObject.data.length / 3; j++) {
+          let c = this._getColor(drawObject.data[3 * j + 2], zmin, zmax)
+          colors[4 * j] = c[0];
+          colors[4 * j + 1] = c[1];
+          colors[4 * j + 2] = c[2];
+          colors[4 * j + 3] = 1;
         }
         let points = drawObject.data;
-        drawObjectsGl.push({type: "points", mesh: GL.Mesh.load({vertices: points, colors: colors}, null, null, this.gl)});
+        drawObjectsGl.push({ type: "points", mesh: GL.Mesh.load({ vertices: points, colors: colors }, null, null, this.gl) });
       }
     }
     this.drawObjectsGl = drawObjectsGl;

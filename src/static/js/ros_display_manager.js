@@ -10,10 +10,10 @@ class ROSDisplayManager {
       serverName: "/tf2_web_republisher"
     });
 
-    // {id: "id of wrapper" subscriptions: [subscription objects]}
-    this.group_subscriptions = [];
+    this.subscriptionManager = new SubscriptionManager();
 
     // bad fix, for inverted colour bug
+    // redefines the getColor function of the OccupancyGrid class to invert the colours
     ROS3D.OccupancyGrid.prototype.getColor = function(index, row, col, value) {
       return [
         255 - ((value * this.color.r) / 255),
@@ -26,16 +26,7 @@ class ROSDisplayManager {
 
   clearDisplays() {
     this.container.innerHTML = "";
-    // this.group_subscriptions.forEach(group => {
-    //   group.subscriptions.forEach(sub => {
-    //     try {
-    //       sub.unsubscribe());
-    //     } catch (error) {
-    //       console.warn(error);
-    //     }
-    //   });
-    // });
-    // this.group_subscriptions = [];
+    this.subscriptionManager.unsubcribeAll();
   }
 
   createDisplays(topicgroups) {
@@ -64,22 +55,22 @@ class ROSDisplayManager {
 
   _createDisplayWrapper(title) {
     const wrapper = document.createElement("div")
-    wrapper.className = "flex flex-col p-2 secondary rounded border border-coloured"
-    wrapper.style.maxHeight = "100%";
+    wrapper.className = "flex flex-col p-2 primary rounded border border-coloured min-h-[550px] w-[500px] grow"
     const heading = document.createElement("h2")
-    heading.textContent = `${title}`
+    heading.textContent = title
     heading.className = "text-lg font-bold p-2 text-white"
     wrapper.appendChild(heading)
-    const div = document.createElement("div");
-    div.className = "w-full border-coloured h-0";
-    wrapper.appendChild(div);
+    const div = document.createElement("div")
+    div.className = "w-full border-coloured h-0"
+    wrapper.appendChild(div)
     return wrapper
   }
 
+  // MAIN HANDLERS
   _handlePointCloud(group) {
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
-    div.className = "w-full flex h-full pt-4 setWhite rounded";
+    div.className = "flex pt-4 setWhite rounded";
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
@@ -102,11 +93,16 @@ class ROSDisplayManager {
   }
 
 
-  // MAIN HANDLERS
   _handle3d(group) {
+    // create generic wrapper
     const wrapper = this._createDisplayWrapper(group.name);
+    const wrapperId = `wrapper-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    wrapper.id = wrapperId;
+
+
+    // create div for the viewer
     const div = document.createElement("div");
-    div.className = "w-full flex h-full pt-4 setWhite rounded";
+    div.className = "w-full h-full pt-4 setWhite rounded";
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
@@ -123,19 +119,19 @@ class ROSDisplayManager {
     group.topics.forEach(topic => {
       switch (topic.type) {
         case "OccupancyGrid":
-          this._createOccupancyGrid(topic, viewer);
+          this.subscriptionManager.subscribe(wrapperId, this._createOccupancyGrid(topic, viewer));
           break;
         case "Tf":
-          this._createTf(topic, viewer);
+          this.subscriptionManager.subscribe(wrapperId, this._createTf(topic, viewer));
           break;
         case "PoseStamped":
-          this._createPoseStamped(topic, viewer);
+          this.subscriptionManager.subscribe(wrapperId, this._createPoseStamped(topic, viewer));
           break;
         case "Path":
-          this._createPath(topic, viewer);
+          this.subscriptionManager.subscribe(wrapperId, this._createPath(topic, viewer));
           break;
         case "URDF":
-          this._createURDF(topic, viewer);
+          this.subscriptionManager.subscribe(wrapperId, this._createURDF(topic, viewer));
           break;
         default:
           console.warn("Unsupported topic type:", topic.type);
@@ -224,7 +220,7 @@ class ROSDisplayManager {
   }
 
   _createOccupancyGrid(topic, viewer) {
-    const gridClient = new ROS3D.OccupancyGridClient({
+    return new ROS3D.OccupancyGridClient({
       ros: this.ros,
       rootObject: viewer.scene,
       continuous: true,
@@ -242,7 +238,7 @@ class ROSDisplayManager {
     };
 
     const pathOptions = topic.options ? { ...defaults, ...topic.options } : defaults;
-    new ROS3D.Path(pathOptions);
+    return new ROS3D.Path(pathOptions);
   }
 
   _createURDF(topic, viewer) {
@@ -299,6 +295,7 @@ class ROSDisplayManager {
       tfQuat.multiply(rot90);
       poseMarker.quaternion.copy(tfQuat);
     });
+    return poseTopic
   }
 
   // GRAPH HANDLERS
@@ -322,6 +319,7 @@ class ROSDisplayManager {
       }
       chart.update("none");
     });
+    return twistTopic
   }
 
 }

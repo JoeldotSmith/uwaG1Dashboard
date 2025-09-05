@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 ## Running
 ``` bash
-cd uwaG1Dashboard
+cd uwaG1Dashboard/src # important to be in the src directory to use the run.sh script else you can run manually
 ./src/run.sh
 ```
 Default web deployment on  connection https://<host>:8000

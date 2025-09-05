@@ -20,6 +20,7 @@
 
     <!-- main display manager -->
   <script src="/static/js/ros_display_manager.js"></script>
+  <script src="/static/js/subscription_manager.js"></script>
     <!-- end -->
 
 
@@ -123,10 +124,8 @@
 
     <!-- Main content area -->
     <div class="flex w-full flex-col">
-      <main class="flex-1 p-4 overflow-auto primary border-coloured">
-        <div id="main-container" class="grid gap-4 p-4 secondary rounded h-full overflow-auto"
-            style="grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-                    grid-auto-rows: minmax(33%, 100%);">
+      <main class="flex-1 p-4 secondary overflow-auto">
+        <div id="main-container" class="flex flex-wrap gap-4 p-4 secondary rounded overflow-auto ">
         </div>
       </main>
       <footer class="h-16 w-full secondary p-4 flex flex-row gap-4 items-center" style="border: 1px solid #414141">
