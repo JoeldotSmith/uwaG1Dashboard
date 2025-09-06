@@ -71,75 +71,95 @@
     background-color: #181818;
   }
 </style>
-<body >
-  <div class="flex h-screen text-white" x-data="{ openPanel: 'run' }">
-    <!-- Left button column -->
-    <div class="flex flex-col w-16 secondary border-coloured">
-      <button @click="openPanel = openPanel === 'run' ? null : 'run'" class="h-16 flex items-center justify-center hover:bg-gray-700">
-        <i class="material-icons">play_arrow</i>
-      </button>
-      <button @click="openPanel = openPanel === 'layout' ? null : 'layout'" class="h-16 flex items-center justify-center hover:bg-gray-700">
-        <i class="material-icons">view_quilt</i>
-      </button>
+<body class="secondary">
+  <div class="flex h-screen text-white flex-col " x-data="{ openPanel: null }">
+    <div class="flex flex-col h-full lg:flex-row max-h-[96vh] lg:max-h-[92vh]">
+      <!-- Left button column -->
+      <div class="order-2 lg:order-1 flex flex-row lg:flex-col min-h-16 lg:min-w-16 secondary border-coloured z-50">
+        <button @click="openPanel = openPanel === 'run' ? null : 'run'" class="h-16 flex grow lg:grow-0 items-center justify-center hover:bg-gray-700">
+          <i class="material-icons">play_arrow</i>
+        </button>
+        <button @click="openPanel = openPanel === 'layout' ? null : 'layout'" class="h-16 grow lg:grow-0 flex items-center justify-center hover:bg-gray-700">
+          <i class="material-icons">view_quilt</i>
+        </button>
+        <div class="grow-0 lg:grow"></div>
+        <button id="killButton" class="h-16 flex items-center justify-center grow lg:grow-0 hover:bg-gray-700 ">
+          <i class="material-icons text-red-600">stop_circle</i>
+        </button>
+      </div>
 
-      <div class="grow"></div>
-      <button id="killButton" class="h-16 flex items-center justify-center hover:bg-gray-700 ">
-        <i class="material-icons text-red-600">stop_circle</i>
-      </button>
-    </div>
-
-    <!-- Right panel column -->
-    <div x-show="openPanel" x-transition class="w-80 secondary border-coloured overflow-auto">
-      <!-- Run panel -->
-      <div x-show="openPanel === 'run'" x-transition >
-        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141"> 
-          <h1 class="text-xl font-bold">UWA G1 Dashboard</h1> 
-        </div> 
-        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141; padding-top: 0"> 
-          <div class="flex flex-row pt-4"> 
-            <p class="grow">G1 Status: </p> 
-            <span id="G1Status" class="w-4 h-4 rounded-full bg-red-500 inline-block" style="margin: auto;"></span> 
-            <p id="G1StatusMessage" style="padding-left: 0.5rem">Not Running</p> 
+      <!-- panel column -->
+      <div 
+        x-show="openPanel" 
+        x-transition:enter="transition ease-in-out duration-300 transform"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in-out duration-300 transform"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full"
+        class="order-3 lg:order-2 w-full lg:w-80 secondary border-coloured flex flex-col h-[30vh] lg:h-full"
+      >
+        <!-- Run panel -->
+        <div x-show="openPanel === 'run'" class="flex flex-col h-full"  
+        x-transition:enter="transition ease-in-out duration-300 transform"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in-out duration-300 transform"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full">
+          <div class="flex flex-col p-4 border-b border-[#414141]"> 
+            <h1 class="text-xl font-bold">UWA G1 Dashboard</h1> 
           </div> 
-        </div> 
-        <div id="buttonContainer" class="flex flex-col gap-4 p-4"> 
+          <div class="flex flex-col p-4 border-b border-[#414141] pt-0"> 
+            <div class="flex flex-row pt-4"> 
+              <p class="grow">G1 Status: </p> 
+              <span id="G1Status" class="w-4 h-4 rounded-full bg-red-500 inline-block m-auto"></span> 
+              <p id="G1StatusMessage" class="pl-2">Not Running</p> 
+            </div> 
+          </div> 
+          <div id="buttonContainer" class="flex flex-col gap-4 p-4 flex-1 overflow-auto"> 
+          </div>
+        </div>
+
+        <!-- Layout panel -->
+        <div x-show="openPanel === 'layout'" class="flex flex-col h-full"
+        x-transition:enter="transition ease-in-out duration-300 transform"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in-out duration-300 transform"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full">
+          <div class="flex flex-col p-4 border-b border-[#414141]"> 
+            <h1 class="text-xl font-bold">Layout</h1> 
+          </div> 
+          <div class="flex flex-col p-4 border-b border-[#414141] pt-0"> 
+            <div class="flex flex-row pt-4"> 
+              <p class="grow">Panel Count: </p> 
+              <p id="panelCount" class="pl-2">0</p> 
+            </div> 
+          </div> 
+          <div id="layoutContainer" class="flex flex-col gap-4 flex-1 overflow-auto"> 
+          </div>
         </div>
       </div>
 
-      <!-- Layout panel -->
-      <div x-show="openPanel === 'layout'" x-transition>
-        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141"> 
-          <h1 class="text-xl font-bold">Layout</h1> 
-        </div> 
-        <div class="flex flex-col p-4" style="border-bottom: 1px solid #414141; padding-top: 0"> 
-          <div class="flex flex-row pt-4"> 
-            <p class="grow">Panel Count: </p> 
-            <p id="panelCount" style="padding-left: 0.5rem">0</p> 
-          </div> 
-        </div> 
-        <div id="layoutContainer" class="flex flex-col gap-4"> 
-        </div>
-      </div>
-    </div>
-
-    <!-- Main content area -->
-    <div class="flex w-full flex-col">
-      <main class="flex-1 p-4 secondary overflow-auto">
-        <div id="main-container" class="flex flex-wrap gap-4 p-4 secondary rounded overflow-auto ">
+      <!-- Main content area -->
+      <main class="order-1 lg:order-3 flex-1 p-4 secondary overflow-auto">
+        <div id="main-container" class="flex flex-wrap gap-4 p-4 secondary rounded overflow-auto">
         </div>
       </main>
-      <footer class="h-16 w-full secondary p-4 flex flex-row gap-4 items-center" style="border: 1px solid #414141">
-        <div class="grow flex-row gap-4 flex">
-          <p id="cpu"></p>
-          <p id="memory"></p>
-          <p id="disk"></p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span id="footerStatus" class="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
-          <p class="message" id="footerMessage">No action yet</p>
-        </div>
-      </footer>
     </div>
+    <footer class="order-4 lg:order-4 h-[4vh]  lg:h-[8vh] w-full secondary p-4 flex flex-row gap-4 items-center" style="border: 1px solid #414141">
+      <div class="grow flex-row gap-4 flex">
+        <p id="cpu"></p>
+        <p id="memory"></p>
+        <p id="disk"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="footerStatus" class="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
+        <p class="message" id="footerMessage">No action yet</p>
+      </div>
+    </footer>
   </div>
 
 

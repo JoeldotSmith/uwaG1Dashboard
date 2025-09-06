@@ -31,9 +31,19 @@ class ROSDisplayManager {
 
   createDisplays(topicgroups) {
     this.clearDisplays();
-    topicgroups.forEach(group => {
-      this.createDisplay(group);
-    })
+    if (topicgroups.length == 0) {
+      this.container.innerHTML = `
+          <div class="w-full h-full flex flex-col justify-center items-center text-center">
+            <i class="material-icons text-5xl font-bold" style="color: #414141;">smart_toy</i>
+            <span style="color: #414141;">Nothing to see here</span>
+          </div>
+      `;
+      return;
+    } else {
+      topicgroups.forEach(group => {
+        this.createDisplay(group);
+      })
+    }
   }
 
   createDisplay(group) {
