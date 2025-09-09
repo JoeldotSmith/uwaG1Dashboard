@@ -16,7 +16,7 @@ class LogViewer extends Viewer {
         "position": "relative",
         "width": "100%",
       })
-      .appendTo(this.card.content);
+      .appendTo(this.card);
 
     this.wrapper2 = $('<div></div>')
       .css({
@@ -46,6 +46,7 @@ class LogViewer extends Viewer {
     $('<div></div>')
       .text("Logs will appear here.")
       .appendTo(this.logContainer);
+    console.log(this.logContainer);
 
 
     let that = this;
@@ -55,6 +56,7 @@ class LogViewer extends Viewer {
   }
 
   onData(msg) {
+    if (!this.logContainer) return
     while (this.logContainer.children().length > 30) {
       this.logContainer.children()[0].remove();
     }
