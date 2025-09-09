@@ -80,7 +80,7 @@ class MocopiController(BaseController):
                 self.test_sources,
                 self.sim_objects,
                 "ros2 launch mocopi_ros2 display.launch.py",
-                True,
+                False,
             )
 
             # run collision checker
@@ -89,7 +89,7 @@ class MocopiController(BaseController):
                 self.test_sources,
                 self.sim_objects,
                 "ros2 run fcl_self_collision_checker collision_checker",
-                True,
+                False,
             )
 
             # run pose_follower_node
@@ -98,7 +98,7 @@ class MocopiController(BaseController):
                 self.test_sources,
                 self.sim_objects,
                 "ros2 run g1_pose_follower pose_follower_node",
-                True,
+                False,
             )
 
             if pose and display and collision:

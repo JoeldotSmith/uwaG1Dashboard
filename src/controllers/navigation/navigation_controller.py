@@ -26,7 +26,7 @@ class NavigationController(BaseController):
                 "topics": [
                     {
                         "name": "pelvis",
-                        "type": "tf",
+                        "type": "Tf",
                     },
                     {
                         "name": "/local_occupancy_grid",
@@ -50,7 +50,7 @@ class NavigationController(BaseController):
             },
             {
                 "name": "Lidar",
-                "type": "3d",
+                "type": "PointCloud",
                 "topics": [
                     {
                         "name": "/cloud_registered_1",
@@ -98,18 +98,16 @@ class NavigationController(BaseController):
                     },
                 ],
             },
-            # {
-            #     "name": "Lidar",
-            #     "type": "PointCloud",
-            #     "topics": [
-            #         {
-            #             "name": "/map_point_cloud",
-            #             "type": "PointCloud2",
-            #
-            #         },
-            #     ],
-            #
-            # },
+            {
+                "name": "Lidar",
+                "type": "PointCloud",
+                "topics": [
+                    {
+                        "name": "/map_point_cloud",
+                        "type": "PointCloud2",
+                    },
+                ],
+            },
             {
                 "name": "/cmd_vel",
                 "type": "graph",
@@ -117,6 +115,16 @@ class NavigationController(BaseController):
                     {
                         "name": "/cmd_vel",
                         "type": "Twist",
+                    }
+                ],
+            },
+            {
+                "name": "Rosout",
+                "type": "log",
+                "topics": [
+                    {
+                        "name": "/rosout",
+                        "type": "rosgraph_msgs/Log",
                     }
                 ],
             },

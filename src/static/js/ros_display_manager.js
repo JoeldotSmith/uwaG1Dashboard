@@ -57,6 +57,9 @@ class ROSDisplayManager {
       case "graph":
         this._handleGraph(group)
         break;
+      case "log":
+        this._handleLog(group)
+        break;
       default:
         console.warn("Unsupported topic type:", group.type);
         return null;
@@ -102,6 +105,30 @@ class ROSDisplayManager {
     });
   }
 
+  _handleLog(group) {
+    const wrapper = this._createDisplayWrapper(group.name);
+    const div = document.createElement("div");
+    div.className = "flex pt-4 setWhite rounded";
+    wrapper.appendChild(div);
+    this.container.appendChild(wrapper);
+
+    const uniqueId = `viewer-3d-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    div.id = uniqueId;
+
+    group.topics.forEach(topic => {
+      const sub = new ROSLIB.Topic({
+        ros: this.ros,
+        name: topic.name,
+        messageType: topic.type,
+        throttle_rate: 10,
+      });
+      const viewer = new LogViewer(div, topic.name, topic.type);
+
+      sub.subscribe((msg) => {
+        viewer.onData(msg);
+      });
+    });
+  }
 
   _handle3d(group) {
     // create generic wrapper
@@ -292,6 +319,38 @@ class ROSDisplayManager {
       name: topic.name,
       messageType: "geometry_msgs/PoseStamped",
     });
+
+    viewer.renderer.domElement.addEventListener('mousedown', function(event) {
+      if (!event.shiftKey) return
+
+      const rect = viewer.renderer.domElement.getBoundingClientRect()
+      const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      )
+
+      const raycaster = new THREE.Raycaster()
+      raycaster.setFromCamera(mouse, viewer.camera)
+
+      const intersects = raycaster.intersectObject(viewer.scene, true)
+      if (intersects.length > 0) {
+        const point = intersects[0].point
+
+        const pose = new ROSLIB.Message({
+          header: {
+            frame_id: 'map',
+            stamp: { sec: 0, nsec: 0 }
+          },
+          pose: {
+            position: { x: point.x, y: point.y, z: 0 },
+            orientation: { x: 0, y: 0, z: 0, w: 1 }
+          }
+        })
+
+        poseTopic.publish(pose)
+        console.log('Published goal at', point)
+      }
+    })
 
     poseTopic.subscribe(msg => {
       const p = msg.pose.position;
