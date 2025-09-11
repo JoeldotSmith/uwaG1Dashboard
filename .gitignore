@@ -1,4 +1,5 @@
-*pycache*
+__pycache__/
+*.py[cod]
 lib*
 bin*
 env
