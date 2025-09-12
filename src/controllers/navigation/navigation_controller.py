@@ -23,6 +23,7 @@ class NavigationController(BaseController):
             {
                 "name": "Navigation",
                 "type": "3d",
+                "description": "Main Navigation display for the G1, contains, current location, live OccupancyGrid, goals, and planned paths. To set a goal via the web interface, hold shift and click on the desired location in the map.",
                 "topics": [
                     {
                         "name": "pelvis",
@@ -51,6 +52,7 @@ class NavigationController(BaseController):
             {
                 "name": "Lidar",
                 "type": "PointCloud",
+                "description": "Live Lidar data displayed from the robot",
                 "topics": [
                     {
                         "name": "/cloud_registered_1",
@@ -61,6 +63,7 @@ class NavigationController(BaseController):
             {
                 "name": "/cmd_vel",
                 "type": "graph",
+                "description": "Graph of the command velocity sent to the robot via /cmd_vel",
                 "topics": [
                     {
                         "name": "/cmd_vel",
@@ -73,6 +76,7 @@ class NavigationController(BaseController):
             {
                 "name": "Navigation",
                 "type": "3d",
+                "description": "Main Navigation display for the G1, contains, current location, live OccupancyGrid, goals, and planned paths. To set a goal via the web interface, hold shift and click on the desired location in the map.",
                 "topics": [
                     {
                         "name": "pelvis",
@@ -101,6 +105,7 @@ class NavigationController(BaseController):
             {
                 "name": "Lidar",
                 "type": "PointCloud",
+                "description": "Live Lidar data displayed from the robot",
                 "topics": [
                     {
                         "name": "/map_point_cloud",
@@ -111,6 +116,7 @@ class NavigationController(BaseController):
             {
                 "name": "/cmd_vel",
                 "type": "graph",
+                "description": "Graph of the command velocity sent to the robot via /cmd_vel",
                 "topics": [
                     {
                         "name": "/cmd_vel",
@@ -121,6 +127,7 @@ class NavigationController(BaseController):
             {
                 "name": "Rosout",
                 "type": "log",
+                "description": "Output logs from rosout",
                 "topics": [
                     {
                         "name": "/rosout",

@@ -46,7 +46,6 @@ class LogViewer extends Viewer {
     $('<div></div>')
       .text("Logs will appear here.")
       .appendTo(this.logContainer);
-    console.log(this.logContainer);
 
 
     let that = this;

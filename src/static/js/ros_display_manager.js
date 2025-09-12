@@ -24,6 +24,16 @@ class ROSDisplayManager {
     };
   }
 
+  removeDisplay(id) {
+    let wrap = document.querySelector(`#${id}`);
+    if (wrap) {
+      this.subscriptionManager.unsubcribe(id);
+      wrap.remove();
+    } else {
+      console.warn("Wrapper not found");
+    }
+  }
+
   clearDisplays() {
     this.container.innerHTML = "";
     this.subscriptionManager.unsubcribeAll();
@@ -66,13 +76,51 @@ class ROSDisplayManager {
     }
   }
 
+  _createInfoPage(description) {
+    const infoDiv = document.createElement("div")
+    infoDiv.setAttribute("x-show", "!baseOpen")
+    infoDiv.className = "flex flex-row gap-2 items-center"
+    infoDiv.innerHTML = `<p class="text-sm">${description}</p>`
+    return infoDiv;
+  }
+
   _createDisplayWrapper(title) {
     const wrapper = document.createElement("div")
     wrapper.className = "flex flex-col p-2 primary rounded border border-coloured min-h-[550px] w-[500px] grow"
+    wrapper.id = `wrapper-title-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    wrapper.setAttribute("x-data", "{ baseOpen: true }")
+
+    const headerDiv = document.createElement("div")
+    headerDiv.className = "flex flex-row w-full items-center justify-center gap-2"
+
+    // heading
     const heading = document.createElement("h2")
     heading.textContent = title
-    heading.className = "text-lg font-bold p-2 text-white"
-    wrapper.appendChild(heading)
+    heading.className = "text-lg font-bold p-2 text-white grow";
+
+    // info button
+    const info = document.createElement("button");
+    info.className = "h-8 flex items-center justify-center hover:bg-gray-700";
+    info.setAttribute("x-on:click", "baseOpen = !baseOpen");
+    const infoicon = document.createElement("i");
+    infoicon.className = "material-icons text-gray-400";
+    infoicon.textContent = "info";
+    info.append(infoicon);
+
+    // close button
+    const closeButton = document.createElement("button");
+    closeButton.className = "h-8 flex items-center justify-center hover:bg-gray-700";
+    closeButton.addEventListener('click', () => this.removeDisplay(wrapper.id), false);
+    const icon = document.createElement("i");
+    icon.className = "material-icons text-gray-400";
+    icon.textContent = "close";
+    closeButton.append(icon);
+
+    headerDiv.append(heading)
+    headerDiv.append(info)
+    headerDiv.append(closeButton)
+    wrapper.appendChild(headerDiv)
     const div = document.createElement("div")
     div.className = "w-full border-coloured h-0"
     wrapper.appendChild(div)
@@ -84,6 +132,7 @@ class ROSDisplayManager {
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
     div.className = "flex pt-4 setWhite rounded";
+    div.setAttribute("x-show", "baseOpen")
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
@@ -102,12 +151,16 @@ class ROSDisplayManager {
       sub.subscribe((msg) => {
         viewer.onData(msg);
       });
+      this.subscriptionManager.subscribe(wrapper.id, sub);
     });
+
+    wrapper.appendChild(this._createInfoPage(group.description))
   }
 
   _handleLog(group) {
     const wrapper = this._createDisplayWrapper(group.name);
     const div = document.createElement("div");
+    div.setAttribute("x-show", "baseOpen")
     div.className = "flex pt-4 setWhite rounded";
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
@@ -128,18 +181,18 @@ class ROSDisplayManager {
         viewer.onData(msg);
       });
     });
+
+    wrapper.appendChild(this._createInfoPage(group.description))
   }
 
   _handle3d(group) {
     // create generic wrapper
     const wrapper = this._createDisplayWrapper(group.name);
-    const wrapperId = `wrapper-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    wrapper.id = wrapperId;
-
 
     // create div for the viewer
     const div = document.createElement("div");
     div.className = "w-full h-full pt-4 setWhite rounded";
+    div.setAttribute("x-show", "baseOpen")
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
@@ -156,25 +209,29 @@ class ROSDisplayManager {
     group.topics.forEach(topic => {
       switch (topic.type) {
         case "OccupancyGrid":
-          this.subscriptionManager.subscribe(wrapperId, this._createOccupancyGrid(topic, viewer));
+          this.subscriptionManager.subscribe(wrapper.id, this._createOccupancyGrid(topic, viewer));
           break;
         case "Tf":
-          this.subscriptionManager.subscribe(wrapperId, this._createTf(topic, viewer));
+          this.subscriptionManager.subscribe(wrapper.id, this._createTf(topic, viewer));
           break;
         case "PoseStamped":
-          this.subscriptionManager.subscribe(wrapperId, this._createPoseStamped(topic, viewer));
+          this.subscriptionManager.subscribe(wrapper.id, this._createPoseStamped(topic, viewer));
           break;
         case "Path":
-          this.subscriptionManager.subscribe(wrapperId, this._createPath(topic, viewer));
+          this.subscriptionManager.subscribe(wrapper.id, this._createPath(topic, viewer));
           break;
         case "URDF":
-          this.subscriptionManager.subscribe(wrapperId, this._createURDF(topic, viewer));
+          this.subscriptionManager.subscribe(wrapper.id, this._createURDF(topic, viewer));
           break;
         default:
           console.warn("Unsupported topic type:", topic.type);
           return null;
       }
     })
+
+
+    wrapper.appendChild(this._createInfoPage(group.description))
+
     const resizeObserver = new ResizeObserver(entries => {
       for (let entry of entries) {
         const { width, height } = entry.contentRect;
@@ -189,6 +246,7 @@ class ROSDisplayManager {
     const div = document.createElement("div");
     div.className = "w-full h-full pt-4 setWhite rounded flex flex-col";
     div.style = "position: relative";
+    div.setAttribute("x-show", "baseOpen")
     wrapper.appendChild(div);
     this.container.appendChild(wrapper);
 
@@ -222,7 +280,7 @@ class ROSDisplayManager {
     group.topics.forEach(topic => {
       switch (topic.type) {
         case "Twist":
-          this._createTwist(topic, chart, data);
+          this.subscriptionManager.subscribe(wrapper.id, this._createTwist(topic, chart, data));
           break;
         default:
           console.warn("Unsupported topic type:", topic.type);
@@ -230,6 +288,8 @@ class ROSDisplayManager {
 
       }
     })
+
+    wrapper.appendChild(this._createInfoPage(group.description))
     const resizeObserver = new ResizeObserver(() => chart.resize());
     resizeObserver.observe(div);
   }
